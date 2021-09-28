@@ -1,0 +1,115 @@
+@font-face {
+  font-family: "MyFont";
+  src: local("MyFont"), url(./Emulogic-zrEw.ttf) format("truetype");
+}
+
+body,
+#game,
+#background1,
+#camera,
+#hud {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  font-family: "MyFont";
+  font-size: 1em;
+  color: white;
+}
+
+#background1,
+#camera,
+#hud {
+  position: absolute;
+}
+
+#game {
+  position: relative;
+}
+
+#background1 {
+  background-image: url("./assets/images/spacebg.jpg");
+}
+
+#hud {
+  z-index: 5;
+  opacity: 0.75;
+}
+
+.data {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12%;
+  border-radius: 25px;
+  border: 25px solid transparent;
+  border-image: url("./assets/images/border.svg") 25 stretch;
+  padding: 0;
+  margin: 0;
+}
+
+.ammo {
+  position: absolute;
+  top: 20%;
+  left: 0;
+  border-radius: 25px;
+  border: 25px solid transparent;
+  border-image: url("./assets/images/border.svg") 25 stretch;
+  padding: 0;
+  margin: 0;
+}
+
+.health {
+  position: absolute;
+  top: 20%;
+  right: 0;
+  border-radius: 25px;
+  border: 25px solid transparent;
+  border-image: url("./assets/images/border.svg") 25 stretch;
+  padding: 0;
+  margin: 0;
+}
+
+.message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 25px;
+  border: 25px solid transparent;
+  border-image: url("./assets/images/border.svg") 25 stretch;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5em;
+  opacity: 1;
+}
+
+.diagnostics {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.diagtext {
+  display: block;
+}
+
+.sm_txt {
+  font-size: 0.6em;
+}
+
+.blink_me {
+  animation: blinker 1.25s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.hidden {
+  display: none;
+}
