@@ -1,69 +1,112 @@
+/*Initialize and administer
+ * Web Worker
+ * Plus event listener, and message posting
+ * creation of messages queue
+ */
+
+/*Init routine and UI handles
+ *get global handles for reference
+ */
+
+var elemFPS = document.getElementById("fps")
+var elemElapsed = document.getElementById("elapsed")
+
+let assetPlayerSprite, assetAsteroidSprite, assetPlayerBulletSprite
+let gameLevel = 1
 let screenWidth = window.innerWidth
 let screenHeight = window.innerHeight
 let entityArray = []
-var animationSequences = {}
-let assetPlayerSprite, assetAsteroidSprite
+
+/**
+ * Time stamp variables and GameLoop
+ *
+ */
+var previousTimestamp
+var elapsed
 var fpsTimer = 0,
-  fps,
   frameCounter = 0,
-  previousTimestamp,
-  elapsed
-let elemFPS, elemElapsed, elemtstamp
-let gameLevel = 1
+  fps = 0
+
+function configureLevel(level) {
+  //clear out entities()
+  let numAsteroids = level + Math.floor(Math.random() * 5)
+  entities = []
+  entityArray = addPlayerEntity(screenWidth, screenHeight)
+  let tempArray = generateAsteroids(numAsteroids, screenWidth, screenHeight)
+  entityArray = entityArray.concat(tempArray)
+}
 
 function init() {
-  //Load Assets
+  //initialize events, including keyboard handler
+  initEvents()
+
+  //send initializtion messages to worker
+  postMessagetoWorker({ type: "setWindowDims", data: { w: screenWidth, h: screenHeight } })
+
+  //init spritesheets
   assetPlayerSprite = new Spritesheet("./assets/images/player1.png", 1, 1)
   assetPlayerSprite.init()
   assetAsteroidSprite = new Spritesheet("./assets/images/asteroid.png", 8, 8, 128, 128)
   assetAsteroidSprite.init()
+  assetPlayerBulletSprite = new Spritesheet("./assets/images/playerbullet.png", 1, 1)
+  assetPlayerBulletSprite.init()
 
-  //path = null, numrows = 1, numcols = 1, frameWidth = null, frameHeight = null) {
+  //seed random number generator
   Math.seedrandom(Date.now())
-  initEvents()
 
-  //get global handles for reference
-  elemFPS = document.getElementById("fps")
-  elemElapsed = document.getElementById("elapsed")
-  cameraHandle = document.getElementById("camera")
-
-  //load spritesheet sequences
-  animationSequences["asteroid1_forward"] = new Sequence(assetAsteroidSprite, "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 110)
-  animationSequences["asteroid1_reverse"] = new Sequence(assetAsteroidSprite, "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 110, "reverse")
-  animationSequences["asteroid2_forward"] = new Sequence(assetAsteroidSprite, "32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 110)
-  animationSequences["asteroid2_reverse"] = new Sequence(assetAsteroidSprite, "32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 110, "reverse")
-  configureLevel(gameLevel, animationSequences)
+  //need to load entities starting with Player
+  configureLevel(gameLevel)
 
   //assign components to each entity
   entityArray.forEach((entityData) => {
-    const entity = new Entity(entityData.id)
+    const entity = new Entity(entityData.id, entityData.category)
     for (const [component, data] of Object.entries(entityData.components)) {
       Component.assignTo(entity, component, data)
     }
 
     entities.push(entity)
-    //console.log(entities)
+    makeDiv(entity)
+  })
+
+  //initialize Animation sequences
+  //postMessagetoWorker({ type: "Sequences", data: {} })
+
+  //make DOM elements for each entity
+  //makeDivs(entities)
+
+  //send entities to worker
+  entities.forEach((ent) => {
+    postMessagetoWorker({
+      type: "entityCreate",
+      data: {
+        id: ent.id,
+        category: ent.category,
+        body: ent.body,
+        attack: ent.attack,
+        sprite: ent.sprite,
+        velocity: ent.velocity,
+        health: ent.health,
+        hitbox: ent.hitbox,
+      },
+    })
+  })
+
+  //set intial sprites
+  entities.forEach((entity) => {
+    entity.innerHandle.style.backgroundImage = `url(${entity.sprite.path})`
+    if (entity.category === "player") {
+      entity.innerHandle.style.transform = `rotate(-${entity.sprite.rotation}deg)`
+    }
+    entity.innerHandle.style.backgroundRepeat = `no-repeat`
+    set_visibility(entity, false)
   })
 
   showIntroScreen()
 }
 
-function configureLevel(level, animationobject) {
-  //clear out entities()
-  let numAsteroids = level + Math.floor(Math.random() * 5)
-  entities = []
-  entityArray = addPlayerEntity(screenWidth, screenHeight)
-  let tempArray = generateAsteroids(numAsteroids, screenWidth, screenHeight, animationobject)
-  entityArray = entityArray.concat(tempArray)
-}
-
 function gameLoop(deltaTime) {
   if (isLoopRunning) {
-    //maintenance routines
-    //do game logic checks here
-    //do keyboard checks here
-    //do HUD updates here
-    //FPS Metric
+    //measure elapsed time
     if (previousTimestamp == undefined) {
       previousTimestamp = deltaTime
       elapsed = 0
@@ -71,15 +114,23 @@ function gameLoop(deltaTime) {
       elapsed = deltaTime - previousTimestamp
       elemElapsed.innerHTML = `Elapsed time: ${parseFloat(elapsed).toFixed(3)}`
     }
+
     fpsTimer += elapsed
     frameCounter++
+
     if (fpsTimer > 1000) {
       fps = frameCounter
       frameCounter = fpsTimer = 0
+
       elemFPS.innerHTML = `FPS: ${fps}`
     }
 
-    //entity systems
+    //process updates from web worker
+    processMessages()
+
+    //manage spritesheet updates
+
+    //mangage div renderings
     entities.forEach((entity) => {
       systems.forEach((system) => {
         if (system.processEntity(entity)) {
@@ -89,8 +140,72 @@ function gameLoop(deltaTime) {
     })
   }
   previousTimestamp = deltaTime
-  window.requestAnimationFrame(gameLoop)
+  requestAnimationFrame(gameLoop)
 }
 
 init()
 window.requestAnimationFrame(gameLoop)
+
+class System {
+  constructor(name) {
+    this.name = name
+  }
+
+  processEntity(entity) {
+    return entity[this.name] != null
+  }
+}
+
+class SpriteSystem extends System {
+  constructor() {
+    super("sprite")
+  }
+
+  processEntity(entity) {
+    try {
+      return entity.sprite.frameIndex != -1
+    } catch (error) {
+      console.log(entity)
+    }
+  }
+
+  update(entity) {
+    if (entity.sprite.frameIndex != -1) {
+      const fdata = assetAsteroidSprite.getFrameAttributes(entity.sprite.frameIndex)
+
+      entity.innerHandle.style.backgroundPosition = `-${fdata.x}px -${fdata.y}px`
+    }
+  }
+}
+
+class RenderSystem extends System {
+  constructor() {
+    super("render")
+  }
+
+  processEntity(entity) {
+    return entity.id != null
+  }
+
+  update(entity, deltaTime) {
+    //test first if div exists
+    if (entity.primaryHandle != null) {
+      //this is the diagnostic mode, if enabled, show canvas and diagnstic data
+      if (entity.render.isBorderBoxStateChanged) {
+        if (entity.render.isBorderBoxVisible) {
+          entity.diagHandle.style.border = `1px solid rgb(255,0,255)`
+          entity.diagHandle.innerHTML = `${entity.id}`
+        } else {
+          entity.diagHandle.style.border = `0`
+          entity.diagHandle.innerHTML = ``
+        }
+      }
+
+      //RENDERING LINE HERE
+      entity.body.centerpoint = { x: entity.body.x + entity.body.width / 2, y: entity.body.y + entity.body.height / 2 }
+      entity.primaryHandle.style.transform = `translate(${entity.body.x}px, ${entity.body.y}px) rotate(${-entity.body.theta}deg) scale(${entity.render.scale})`
+    }
+  }
+}
+
+const systems = [new SpriteSystem(), new RenderSystem()]

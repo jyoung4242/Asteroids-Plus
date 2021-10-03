@@ -1,7 +1,10 @@
+var cameraHandle
+
 function addPlayerEntity(w, h) {
   var rsltArray = []
   rsltArray.push({
     id: "player",
+    category: "player",
     components: {
       body: {
         id: "player",
@@ -19,7 +22,7 @@ function addPlayerEntity(w, h) {
         fireRate: 10,
         regenTime: 10,
         maxAmmo: 25,
-        weaponSpeed: 1,
+        weaponSpeed: 10,
         attackTick: 0,
       },
       health: {
@@ -33,10 +36,10 @@ function addPlayerEntity(w, h) {
         maxAcceleration: 1,
         maxSpeed: 10,
         speed: 0,
-        acceleration: 0.1,
+        acceleration: 0.2,
       },
       render: {
-        visible: true,
+        visible: false,
         isBorderBoxVisible: false,
         scale: 1,
       },
@@ -44,6 +47,7 @@ function addPlayerEntity(w, h) {
         path: "./assets/images/player1.png",
         rotation: 90,
         sequence: null,
+        frameIndex: -1,
       },
       hitbox: {
         shape: "rectangle",
@@ -59,17 +63,11 @@ function addPlayerEntity(w, h) {
   return rsltArray
 }
 
-function generateAsteroids(numAsteroids, w, h, animations) {
+function generateAsteroids(numAsteroids, w, h) {
   var rsltArray = []
   //map animation sequence
-  let animationMap = {
-    0: animations["asteroid1_forward"],
-    1: animations["asteroid1_reverse"],
-    2: animations["asteroid2_forward"],
-    3: animations["asteroid2_reverse"],
-  }
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     //determine all the random decisions first
     //random size
     let rndmSize = Math.random() * 1.25 + 0.5
@@ -82,12 +80,14 @@ function generateAsteroids(numAsteroids, w, h, animations) {
     let rndY = Math.random() * h
     //random sequence and spin
     let rndSeq = Math.floor(Math.random() * 4)
-    rndSeq = animationMap[rndSeq]
+
+    //rndSeq = animationMap[rndSeq]
 
     let idString = `asteroid_${i}`
 
     rsltArray.push({
       id: idString,
+      category: "asteroid",
       components: {
         body: {
           width: 128,
@@ -110,13 +110,14 @@ function generateAsteroids(numAsteroids, w, h, animations) {
           acceleration: 0.1,
         },
         render: {
-          visible: true,
+          visible: false,
           isBorderBoxVisible: false,
           scale: rndmSize,
         },
         sprite: {
           path: "./assets/images/asteroid.png",
           rotation: 0,
+          frameIndex: 0,
           sequence: rndSeq,
         },
         hitbox: {
@@ -134,11 +135,114 @@ function generateAsteroids(numAsteroids, w, h, animations) {
   return rsltArray
 }
 
+function makeDiv(entity) {
+  //create new div
+  cameraHandle = document.getElementById("camera")
+
+  entity.primaryHandle = document.createElement("div")
+  entity.primaryHandle.setAttribute("id", entity.id)
+  entity.primaryHandle.setAttribute("class", "entity")
+  entity.primaryHandle.setAttribute("width", `${entity.body.width}`)
+  entity.primaryHandle.setAttribute("height", `${entity.body.height}`)
+  entity.primaryHandle.setAttribute("style", `width: ${entity.body.width}px; height: ${entity.body.height}px;  position: absolute`)
+
+  entity.innerHandle = document.createElement("div")
+  entity.innerHandle.setAttribute("id", entity.id.concat("_inner"))
+  entity.innerHandle.setAttribute("class", "entityImage")
+  entity.innerHandle.setAttribute("width", `${entity.body.width}`)
+  entity.innerHandle.setAttribute("height", `${entity.body.height}`)
+  entity.innerHandle.setAttribute("style", `width: ${entity.body.width}px; height: ${entity.body.height}px;  position: absolute`)
+
+  entity.diagHandle = document.createElement("div")
+  entity.diagHandle.setAttribute("id", entity.id.concat("_diag"))
+  entity.diagHandle.setAttribute("class", "entityDiag")
+  entity.diagHandle.setAttribute("width", `${entity.hitbox.w}`)
+  entity.diagHandle.setAttribute("height", `${entity.hitbox.h}`)
+
+  if (entity.hitbox.shape === "circle") {
+    entity.diagHandle.setAttribute("style", `width: ${entity.hitbox.w}px; height: ${entity.hitbox.h}px;  position: absolute; border-radius: 50%;`)
+    entity.diagHandle.style.transform = `translate(${entity.hitbox.x}px, ${entity.hitbox.y}px)`
+  } else {
+    entity.diagHandle.setAttribute("style", `width: ${entity.hitbox.w}px; height: ${entity.hitbox.h}px;  position: absolute;)`)
+    entity.diagHandle.style.transform = `translate(${entity.hitbox.x}px, ${entity.hitbox.y}px)`
+  }
+
+  cameraHandle.appendChild(entity.primaryHandle)
+  entity.primaryHandle.appendChild(entity.innerHandle)
+  entity.primaryHandle.appendChild(entity.diagHandle)
+}
+
 class Entity {
-  constructor(id) {
+  constructor(id, category) {
     this.id = id
+    this.category = category
     this.primaryHandle = null
     this.diagHandle = null
     this.innerHandle = null
   }
+}
+
+function createPlayerBullet(bulletPosition, g1) {
+  let timestamp = performance.now().toFixed(0)
+  let idString
+  if (g1) {
+    idString = `G1_bullet_${timestamp}`
+  } else {
+    idString = `G2_bullet_${timestamp}`
+  }
+
+  let bulletObject = {
+    id: idString,
+    category: "bullet",
+    components: {
+      body: {
+        width: 20,
+        height: 15,
+        x: bulletPosition.x,
+        y: bulletPosition.y,
+        centerpoint: { x: 0, y: 0 },
+        theta: bulletPosition.theta,
+        isUserControlled: false,
+        isAiControlled: false,
+      },
+      attack: {
+        attackStrength: 1,
+        fireRate: null,
+        regenTime: null,
+        maxAmmo: null,
+        weaponSpeed: 10,
+        attackTick: null,
+      },
+      velocity: {
+        deltaX: 0,
+        deltaY: 0,
+        theta: bulletPosition.theta,
+        deltaTheta: 0,
+        maxAcceleration: 1,
+        maxSpeed: 10,
+        speed: 10,
+        acceleration: 0.1,
+      },
+      render: {
+        visible: true,
+        isBorderBoxVisible: false,
+        scale: 1,
+      },
+      sprite: {
+        path: "./assets/images/playerbullet.png",
+        rotation: 90,
+        frameIndex: -1,
+        sequence: null,
+      },
+      hitbox: {
+        shape: "rectangle",
+        x: 0,
+        y: 0,
+        w: 20,
+        h: 15,
+        mass: 0.05,
+      },
+    },
+  }
+  return bulletObject
 }

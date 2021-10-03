@@ -1,20 +1,93 @@
-var deltaTheta = 0
-var accelTick = 0
-let oppositeAngle = 0
-let incrementAngle = 0
-var cameraHandle
-var diagAngle, diagSpeed, diagVelAngle, diagDeltaAngle
-let time1, time2
+var intervalTime = 32
+var isLoopRunning = false
+var messageQueue = []
+var entities = []
+var animationSequences = {}
 var activeCollisions = []
+var held_directions = []
+let screenWidth
+let screenHeight
 
-class System {
-  constructor(name) {
-    this.name = name
-  }
+/* Direction key state */
+const directions = {
+  up: "up",
+  down: "down",
+  left: "left",
+  right: "right",
+}
+const keys = {
+  ArrowUp: directions.up,
+  ArrowLeft: directions.left,
+  ArrowRight: directions.right,
+  ArrowDown: directions.down,
+}
 
-  processEntity(entity) {
-    return entity[this.name] != null
+importScripts("./spritesheet.js")
+
+onmessage = (e) => {
+  switch (e.data.type) {
+    case "TimerEnable":
+      isLoopRunning = e.data.data.enabled
+      break
+    case "setWindowDims":
+      screenWidth = e.data.data.w
+      screenHeight = e.data.data.h
+      break
+    case "keypress":
+      held_directions = e.data.data
+      break
+    case "Sequences":
+      initAnimationSequences()
+      break
+    case "entityCreate":
+      createEnt(e.data.data)
+      assignAnimationSequence(e.data.data)
+      break
+    case "resize":
+      screenWidth = e.data.data.w
+      screenHeight = e.data.data.h
+      break
+    case "bullet":
+      console.log(e.data)
+      createEnt(e.data.data)
+      break
+    default:
+      messageQueue.push(e.data)
   }
+}
+
+function initAnimationSequences() {
+  //load spritesheet sequences
+  animationSequences["asteroid1_forward"] = new Sequence("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 110)
+  animationSequences["asteroid1_reverse"] = new Sequence("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 110, "reverse")
+  animationSequences["asteroid2_forward"] = new Sequence("32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 110)
+  animationSequences["asteroid2_reverse"] = new Sequence("32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 110, "reverse")
+}
+
+function assignAnimationSequence(ent) {
+  if (ent.category === "asteroid") {
+    switch (ent.sprite.sequence) {
+      case 0:
+        ent.sprite.sequence = new Sequence("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 100)
+        break
+      case 1:
+        ent.sprite.sequence = new Sequence("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 100, "reverse")
+        break
+      case 2:
+        ent.sprite.sequence = new Sequence("32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 100)
+        break
+      case 3:
+        ent.sprite.sequence = new Sequence("32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63", true, 100, "reverse")
+        break
+      default:
+        ent.sprite.sequence = new Sequence("0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31", true, 100)
+        break
+    }
+  }
+}
+
+function toRads(degrees) {
+  return (Math.PI * degrees) / 180
 }
 
 function setNewGapAngle(entity) {
@@ -26,7 +99,8 @@ function setNewGapAngle(entity) {
     if (deltaTheta > 180) {
       deltaTheta = Math.abs(deltaTheta - 360)
     }
-    incrementAngle = deltaTheta / 20
+    //create angle incremeent based on velocity
+    incrementAngle = deltaTheta / (entity.velocity.speed + 0.1)
 
     oppositeAngle = entity.velocity.theta + 180
 
@@ -75,6 +149,82 @@ function normalizeAngle(angle) {
     angle += 360
   }
   return angle
+}
+
+function createEnt(entity) {
+  entities.push(entity)
+}
+
+/**
+ * Time stamp variables and GameLoop
+ *
+ */
+var previousTimestamp
+var elapsed
+
+function postMessagetoMain(data) {
+  self.postMessage(data)
+}
+
+setInterval(() => {
+  if (isLoopRunning) {
+    //measure elapsed time
+    if (previousTimestamp == undefined) {
+      previousTimestamp = performance.now()
+      elapsed = 0
+    } else {
+      elapsed = performance.now() - previousTimestamp
+    }
+    //for each entity, update each system
+    entities.forEach((entity) => {
+      systems.forEach((system) => {
+        if (system.processEntity(entity)) {
+          system.update(entity, elapsed)
+        }
+      })
+    })
+    previousTimestamp = performance.now()
+  }
+}, intervalTime)
+
+class System {
+  constructor(name) {
+    this.name = name
+  }
+
+  processEntity(entity) {
+    return entity[this.name] != null
+  }
+}
+
+class SpriteSystem extends System {
+  constructor() {
+    super("sprite")
+  }
+
+  processEntity(entity) {
+    return entity.sprite.frameIndex != -1
+  }
+
+  update(entity, deltaTime) {
+    if (entity.category == "asteroid") {
+      //the entity div exists
+
+      if (entity.sprite.sequence != null) {
+        //get current index
+        let i = entity.sprite.sequence.getCurrentFrameIndex()
+        entity.sprite.sequence.updateElapsedTime(deltaTime)
+        const frameObject = entity.sprite.sequence.step()
+
+        //if step not ready to increment, returns null
+        if (frameObject != null) {
+          if (i != frameObject.index) {
+            postMessagetoMain({ type: "spritesheet", data: { id: entity.id, frameData: frameObject.frame } })
+          }
+        }
+      }
+    }
+  }
 }
 
 class MovementSystem extends System {
@@ -153,128 +303,7 @@ class MovementSystem extends System {
 
     entity.body.x = entity.body.x + entity.velocity.deltaX
     entity.body.y = entity.body.y + entity.velocity.deltaY
-  }
-}
-
-class RenderSystem extends System {
-  constructor() {
-    super("render")
-  }
-
-  processEntity(entity) {
-    return entity.id != null
-  }
-
-  update(entity, deltaTime) {
-    //test first if div exists
-    if (entity.primaryHandle != null) {
-      //div exists, get inner canvas (to be replaced with Div later)
-      //var elemCnv = document.getElementById(id.concat("_innerCnv"))
-      //var elemCnvCtx = elemCnv.getContext("2d")
-
-      //check entity for visibility and compare to DOM state
-      let vis = entity.primaryHandle.style.visibility
-      if (entity.render.visible && vis != "visible") {
-        entity.primaryHandle.style.visibility = `visible`
-      } else if (!entity.render.visible && vis == "visible") {
-        entity.primaryHandle.style.visibility = `visible`
-      }
-
-      //this is the diagnostic mode, if enabled, show canvas and diagnstic data
-      vis = entity.diagHandle.style.visibility
-      if (entity.render.isBorderBoxVisible && vis != "visible") {
-        entity.diagHandle.style.visibility = `visible`
-      } else if (!entity.render.visible && vis == "visible") {
-        entity.diagHandle.style.visibility = `visible`
-      }
-
-      if (entity.render.isBorderBoxVisible) {
-        entity.diagHandle.style.border = `1px solid rgb(255,0,255)`
-      } else entity.diagHandle.style.border = `0`
-
-      //RENDERING LINE HERE
-      entity.body.centerpoint = { x: entity.body.x + entity.body.width / 2, y: entity.body.y + entity.body.height / 2 }
-      entity.primaryHandle.style.transform = `translate(${entity.body.x}px, ${entity.body.y}px) rotate(${-entity.body.theta}deg) scale(${entity.render.scale})`
-    } else {
-      //create new div
-
-      entity.primaryHandle = document.createElement("div")
-      entity.primaryHandle.setAttribute("id", entity.id)
-      entity.primaryHandle.setAttribute("class", "entity")
-      entity.primaryHandle.setAttribute("width", `${entity.body.width}`)
-      entity.primaryHandle.setAttribute("height", `${entity.body.height}`)
-      entity.primaryHandle.setAttribute("style", `width: ${entity.body.width}px; height: ${entity.body.height}px;  position: absolute`)
-
-      entity.innerHandle = document.createElement("div")
-      entity.innerHandle.setAttribute("id", entity.id.concat("_inner"))
-      entity.innerHandle.setAttribute("class", "entityImage")
-      entity.innerHandle.setAttribute("width", `${entity.body.width}`)
-      entity.innerHandle.setAttribute("height", `${entity.body.height}`)
-      entity.innerHandle.setAttribute("style", `width: ${entity.body.width}px; height: ${entity.body.height}px;  position: absolute`)
-
-      entity.diagHandle = document.createElement("div")
-      entity.diagHandle.setAttribute("id", entity.id.concat("_diag"))
-      entity.diagHandle.setAttribute("class", "entityDiag")
-      entity.diagHandle.setAttribute("width", `${entity.hitbox.w}`)
-      entity.diagHandle.setAttribute("height", `${entity.hitbox.h}`)
-
-      if (entity.hitbox.shape === "circle") {
-        entity.diagHandle.setAttribute("style", `width: ${entity.hitbox.w}px; height: ${entity.hitbox.h}px;  position: absolute; border-radius: 50%;`)
-        entity.diagHandle.style.transform = `translate(${entity.hitbox.x}px, ${entity.hitbox.y}px)`
-      } else {
-        entity.diagHandle.setAttribute("style", `width: ${entity.hitbox.w}px; height: ${entity.hitbox.h}px;  position: absolute;)`)
-        entity.diagHandle.style.transform = `translate(${entity.hitbox.x}px, ${entity.hitbox.y}px)`
-      }
-
-      cameraHandle.appendChild(entity.primaryHandle)
-      entity.primaryHandle.appendChild(entity.innerHandle)
-      entity.primaryHandle.appendChild(entity.diagHandle)
-    }
-  }
-}
-
-class SpriteSystem extends System {
-  constructor() {
-    super("sprite")
-  }
-
-  update(entity, deltaTime) {
-    if (entity.primaryHandle != null) {
-      //the entity div exists
-
-      if (entity.sprite.sequence != null) {
-        if (entity.sprite.isLoaded == false) {
-          //todo-first time through
-          const frameData = entity.sprite.sequence.getCurrentFrame()
-          const divImage = entity.sprite.sequence.spritesheet.image.src
-          entity.innerHandle.style.backgroundImage = `url(${divImage})`
-          entity.innerHandle.style.backgroundRepeat = "no-repeat"
-          entity.innerHandle.style.backgroundPosition = `-${frameData.x}px -${frameData.y}px`
-          entity.sprite.isLoaded = true
-        } else {
-          //check framerate here
-
-          entity.sprite.sequence.updateElapsedTime(deltaTime)
-          entity.sprite.sequence.step()
-          const frameData = entity.sprite.sequence.getCurrentFrame()
-          const bgPosition = entity.innerHandle.style.backgroundPosition
-          if (bgPosition != `-${frameData.x}px -${frameData.y}px`) entity.innerHandle.style.backgroundPosition = `-${frameData.x}px -${frameData.y}px`
-        }
-      } else {
-        //static image
-
-        if (entity.sprite.isLoaded == false) {
-          //first time through
-          if (entity.innerHandle) {
-            entity.innerHandle.style.backgroundImage = `url(${entity.sprite.path})`
-            entity.innerHandle.style.backgroundRepeat = `no-repeat`
-            entity.innerHandle.style.backgroundSize = `${entity.body.width}px, ${entity.body.height}px`
-            entity.innerHandle.style.transform = `rotate(-${entity.sprite.rotation}deg)`
-            entity.sprite.isLoaded = true
-          }
-        }
-      }
-    }
+    postMessagetoMain({ type: "movement", data: { id: entity.id, x: entity.body.x, y: entity.body.y, theta: entity.body.theta } })
   }
 }
 
@@ -291,24 +320,39 @@ class screenCollisionSystem extends System {
     let playerWidth = entity.body.width / 2
 
     if (entity.id) {
-      let screenWidth = window.innerWidth
-      let screenHeight = window.innerHeight
       let rectLeft = entity.body.x + entity.hitbox.x
       let rectRight = entity.body.x + entity.hitbox.x + entity.hitbox.w
       let rectTop = entity.body.y + entity.hitbox.y
       let rectBottom = entity.body.y + entity.hitbox.y + entity.hitbox.h
 
       //is there a screen collision
-
+      let foundIndex
       if (rectRight > screenWidth + playerWidth) {
         //right collision
-        entity.body.x = 0
+        if (entity.category == "bullet") {
+          console.log("here")
+          foundIndex = entities.findIndex((ent) => ent.id == entity.id)
+          postMessagetoMain({ type: "delete", data: { id: entity.id } })
+          entities.splice(foundIndex, 1)
+        } else entity.body.x = 0
       } else if (rectTop < -playerWidth) {
-        entity.body.y = screenHeight - playerWidth * 2
+        if (entity.category == "bullet") {
+          foundIndex = entities.findIndex((ent) => ent.id == entity.id)
+          postMessagetoMain({ type: "delete", data: { id: entity.id } })
+          entities.splice(foundIndex, 1)
+        } else entity.body.y = screenHeight - playerWidth * 2
       } else if (rectBottom > screenHeight + playerWidth) {
-        entity.body.y = 0
+        if (entity.category == "bullet") {
+          foundIndex = entities.findIndex((ent) => ent.id == entity.id)
+          postMessagetoMain({ type: "delete", data: { id: entity.id } })
+          entities.splice(foundIndex, 1)
+        } else entity.body.y = 0
       } else if (rectLeft < -playerWidth) {
-        entity.body.x = screenWidth - playerWidth * 2
+        if (entity.category == "bullet") {
+          foundIndex = entities.findIndex((ent) => ent.id == entity.id)
+          postMessagetoMain({ type: "delete", data: { id: entity.id } })
+          entities.splice(foundIndex, 1)
+        } else entity.body.x = screenWidth - playerWidth * 2
       }
     }
   }
@@ -320,22 +364,25 @@ class A2ACollisionSystem extends System {
   }
 
   processEntity(entity) {
-    return entity.body.isUserControlled == false && entity.body.isAiControlled == false
+    return entity.category === "asteroid"
   }
 
   update(entity, deltaTime) {
     //list of other asteroids
+
     entities.forEach((ent) => {
       //check our entity against all the others
       //check for first pass and hasn't rendered
       if (entity.diagHandle === null) return
       if (ent.diagHandle === null) return
+      //console.log(ent)
       if (ent.id.search("asteroid") != -1) {
         //entity is an asteroid
         //test for yourself
         if (ent.id != entity.id) {
           //not yourself
           //get radius and centerpoint of asteroid hitboxes
+
           let A1 = {
             left: ent.body.x + ent.hitbox.x,
             right: ent.body.x + ent.hitbox.x + ent.hitbox.w,
@@ -402,12 +449,4 @@ class A2ACollisionSystem extends System {
   }
 }
 
-class AISystem extends System {
-  constructor() {
-    super("AI")
-  }
-
-  update(entity, deltaTime) {}
-}
-
-const systems = [new AISystem(), new SpriteSystem(), new MovementSystem(), new screenCollisionSystem(), new A2ACollisionSystem(), new RenderSystem()]
+const systems = [new SpriteSystem(), new MovementSystem(), new screenCollisionSystem(), new A2ACollisionSystem()]

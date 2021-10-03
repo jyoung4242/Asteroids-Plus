@@ -1,6 +1,9 @@
 //keyboard variables
-let held_directions = []
+var held_directions = []
 var isLoopRunning = false
+
+/*Weapon variables */
+var isGun1Firing = true
 
 /* Direction key state */
 const directions = {
@@ -65,18 +68,21 @@ function keydownHandler(e) {
       var dir = keys[e.code]
       if (dir && held_directions.indexOf(dir) === -1) {
         held_directions.unshift(dir)
+        postMessagetoWorker({ type: "keypress", data: held_directions })
       }
     } else {
       //some other key
       if (e.code == `Backquote`) {
         document.dispatchEvent(toggleCollisionBoxes)
-      }
-      if (e.code == `Equal`) {
+      } else if (e.code == `Equal`) {
         document.dispatchEvent(pauseLoop)
+      } else if (e.code == "Space") {
+        document.dispatchEvent(fireEventPlayer)
       }
     }
   } else {
     //keypress management outside of game
+
     document.dispatchEvent(startGame)
   }
 }
@@ -94,12 +100,68 @@ function keyupHandler(e) {
     let index = held_directions.indexOf(dir)
     if (index > -1) {
       held_directions.splice(index, 1)
+      postMessagetoWorker({ type: "keypress", data: held_directions })
     }
   }
 }
 
+function reportWindowSize(e) {
+  postMessagetoWorker({ type: "resize", data: { w: window.innerWidth, h: window.innerHeight } })
+}
+
 function fireWeaponHandler(e) {
-  console.log(e.detail, "Weapon Fired!")
+  let bulletPositionObject = {}
+  //find player entity
+  const playerentity = entities.find((ent) => ent.category == "player")
+  //console.log(playerentity)
+  //track the toggle of g1 vs g2
+  if (isGun1Firing) {
+    //Gun1
+    isGun1Firing = false
+    //find position of weapon Gun1
+
+    bulletPositionObject = findGunPosition(1, playerentity)
+  } else {
+    //Gun2
+    isGun1Firing = true
+    //find position of weapon Gun2
+    bulletPositionObject = findGunPosition(2, playerentity)
+  }
+
+  //create the entity
+  let bulletEntity = createPlayerBullet(bulletPositionObject, isGun1Firing)
+  console.log(bulletEntity)
+  console.log(bulletPositionObject)
+
+  entity = new Entity(bulletEntity.id, bulletEntity.category)
+  for (const [component, data] of Object.entries(bulletEntity.components)) {
+    Component.assignTo(entity, component, data)
+  }
+  entities.push(entity)
+  makeDiv(entity)
+  //console.log(entity, entities)
+
+  //set sprite
+  entity.innerHandle.style.backgroundImage = `url(${entity.sprite.path})`
+  entity.innerHandle.style.transform = `rotate(-${entity.sprite.rotation}deg)`
+  entity.innerHandle.style.backgroundSize = `contain`
+  entity.innerHandle.style.backgroundRepeat = `no-repeat`
+  set_visibility(entity, true)
+
+  //send to worker
+  postMessagetoWorker({
+    type: "bullet",
+    data: {
+      id: entity.id,
+      category: entity.category,
+      body: entity.body,
+      attack: entity.attack,
+      sprite: entity.sprite,
+      velocity: entity.velocity,
+      health: entity.health,
+      hitbox: entity.hitbox,
+    },
+  })
 }
 
 function collisionWithAsteroidHandler(e) {
@@ -178,12 +240,14 @@ function toggleCollisionBoxesHandler() {
 
     entities.forEach((entity) => {
       entity.render.isBorderBoxVisible = false
+      entity.render.isBorderBoxStateChanged = true
     })
     document.getElementById("diagnostics").classList.add("hidden")
   } else {
     collisionBoxesVisible = true
     entities.forEach((entity) => {
       entity.render.isBorderBoxVisible = true
+      entity.render.isBorderBoxStateChanged = true
     })
     document.getElementById("diagnostics").classList.remove("hidden")
   }
@@ -224,4 +288,5 @@ function initEvents() {
   document.addEventListener("startGame", startGameHandler)
   document.addEventListener("toggleCollisionBoxes", toggleCollisionBoxesHandler)
   document.addEventListener("pauseLoop", pauseHandler)
+  window.addEventListener("resize", reportWindowSize)
 }
