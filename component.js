@@ -121,6 +121,7 @@ class Render extends Component {
     if (data != null) {
       this.value.visible = data.visible
       this.value.isBorderBoxVisible = data.isBorderBoxVisible
+      this.value.isBorderBoxStateChanged = false
       this.value.scale = data.scale
     }
   }
@@ -158,6 +159,7 @@ class Sprite extends Component {
       this.value.path = data.path
       this.value.rotation = data.rotation
       this.value.sequence = data.sequence
+      this.value.frameIndex = data.frameIndex
       this.value.isLoaded = false
     }
   }
