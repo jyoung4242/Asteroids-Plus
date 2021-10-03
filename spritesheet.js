@@ -102,12 +102,12 @@ class Spritesheet {
 }
 
 class Sequence {
-  constructor(spritesheet, frameString, isLooping = false, frameRate = 60, direction = "normal") {
+  constructor(frameString, isLooping = false, frameRate = 60, direction = "normal") {
     //****************************** */
     //should do data validation here
 
     //****************************** */
-    this.spritesheet = spritesheet
+    //this.spritesheet = spritesheet
     this.frameString = frameString
     this.isLooping = isLooping
     this.frameRate = frameRate
@@ -116,8 +116,9 @@ class Sequence {
     this.numFrames = 0
     this.elapsedTime = 0
     //count number of frames
-    let tempArray = frameString.split(",")
-    this.numFrames = tempArray.length
+    this.frameArray = this.frameString.split(",")
+    this.numFrames = this.frameArray.length
+
     return
   }
 
@@ -130,7 +131,7 @@ class Sequence {
   step() {
     if (this.elapsedTime > this.frameRate) {
       this.elapsedTime = 0
-      if (this.direction == "normal") {
+      if (this.direction === "normal") {
         this.currentIndex++
       } else {
         this.currentIndex--
@@ -138,8 +139,18 @@ class Sequence {
       //test for zero and going past end of sequence
       if (this.currentIndex < 0) this.currentIndex = this.numFrames - 1
       else if (this.currentIndex == this.numFrames) this.currentIndex = 0
-      return this.currentIndex
+
+      let obj = {
+        index: this.currentIndex,
+        frame: this.frameArray[this.currentIndex],
+      }
+      return obj
     }
+    return null
+  }
+
+  getCurrentFrameIndex() {
+    return this.currentIndex
   }
 
   reset() {
@@ -148,7 +159,7 @@ class Sequence {
   }
 
   getCurrentFrame() {
-    return this.spritesheet.getFrameAttributes(this.currentIndex)
+    return this.frameArray[this.currentIndex]
   }
 
   setFrameRate(newFrameRate) {
