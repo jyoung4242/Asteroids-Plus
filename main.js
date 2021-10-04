@@ -21,8 +21,8 @@ var sfx = {}
 var music = {}
 
 var body = document.getElementsByTagName("body")[0]
-body.style.width = screen.width * window.devicePixelRatio
-body.style.height = screen.height * window.devicePixelRatio
+body.style.width = window.innerWidth
+body.style.height = window.innerHeight
 
 console.log(`Screen Size: ${screen.width}, ${screen.height}`)
 console.log(`Window Size: ${window.innerWidth}, ${window.innerHeight}`)
