@@ -5,7 +5,7 @@ function addPlayerEntity(w, h) {
   /* if (screen.width < 800) {
     screenScale = 0.5
   } */
-  if (window.innerWidth < 800) screenScale = 0.5
+  if (window.innerWidth < 1000) screenScale = 0.5
   else screenScale = 1
 
   var rsltArray = []
@@ -83,7 +83,7 @@ function generateAsteroids(numAsteroids, w, h) {
     //random size
     //let rndmSize = Math.random() * 1.25 + 0.5
 
-    if (window.innerWidth < 800) rndmSize = Math.random() * 0.75 + 0.1
+    if (window.innerWidth < 1000) rndmSize = Math.random() * 0.75 + 0.1
     else rndmSize = Math.random() * 1.25 + 0.5
 
     //random starting angle
@@ -91,7 +91,7 @@ function generateAsteroids(numAsteroids, w, h) {
     //random speed
     //let rndSpeed = 10 - rndmSize * 6
 
-    if (window.innerWidth < 800) rndSpeed = 6 - rndmSize * 4
+    if (window.innerWidth < 1000) rndSpeed = 6 - rndmSize * 4
     else rndSpeed = 10 - rndmSize * 6
 
     //random starting point
@@ -202,7 +202,7 @@ class Entity {
 }
 
 function createPlayerBullet(bulletPosition, g1) {
-  if (window.innerWidth < 800) screenScale = 0.5
+  if (window.innerWidth < 1000) screenScale = 0.5
   else screenScale = 1
   let timestamp = performance.now().toFixed(0)
   let idString
