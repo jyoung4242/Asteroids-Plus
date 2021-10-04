@@ -47,7 +47,7 @@ body,
   border-image: url("./assets/images/border.svg") 25 stretch;
   padding: 0;
   margin: 0;
-  font-size: 1.5vw;
+  font-size: 1.4vw;
 }
 
 .ammo {
@@ -59,7 +59,7 @@ body,
   border-image: url("./assets/images/border.svg") 25 stretch;
   padding: 0;
   margin: 0;
-  font-size: 1.5vw;
+  font-size: 1.4vw;
 }
 
 .health {
@@ -71,7 +71,7 @@ body,
   border-image: url("./assets/images/border.svg") 25 stretch;
   padding: 0;
   margin: 0;
-  font-size: 1.5vw;
+  font-size: 1.4vw;
 }
 
 .message {
@@ -84,7 +84,7 @@ body,
   border-image: url("./assets/images/border.svg") 25 stretch;
   padding: 0;
   margin: 0;
-  font-size: 1.8vw;
+  font-size: 1.4vw;
   opacity: 1;
 }
 
