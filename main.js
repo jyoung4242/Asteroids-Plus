@@ -20,6 +20,9 @@ var lastStickState
 var sfx = {}
 var music = {}
 
+console.log(`Screen Size: ${screen.width}, ${screen.height}`)
+console.log(`Window Size: ${window.innerWidth}, ${window.innerHeight}`)
+
 /**
  * Time stamp variables and GameLoop
  *

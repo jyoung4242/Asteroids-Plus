@@ -1,6 +1,13 @@
 var cameraHandle
 
 function addPlayerEntity(w, h) {
+  let screenScale = 1
+  /* if (screen.width < 800) {
+    screenScale = 0.5
+  } */
+  if (window.innerWidth < 800) screenScale = 0.5
+  else screenScale = 1
+
   var rsltArray = []
   rsltArray.push({
     id: "player",
@@ -41,7 +48,7 @@ function addPlayerEntity(w, h) {
       render: {
         visible: false,
         isBorderBoxVisible: false,
-        scale: 1,
+        scale: screenScale,
       },
       sprite: {
         path: "./assets/images/player1.png",
@@ -66,15 +73,27 @@ function addPlayerEntity(w, h) {
 function generateAsteroids(numAsteroids, w, h) {
   var rsltArray = []
   //map animation sequence
-
+  /* let screenScale = 1
+  let rndmSize = Math.random() * 1.25 + 0.5
+  if (screen.width < 800) {
+    rndmSize = Math.random() * 0.75 + 0.1
+  } */
   for (let i = 0; i < numAsteroids; i++) {
     //determine all the random decisions first
     //random size
-    let rndmSize = Math.random() * 1.25 + 0.5
+    //let rndmSize = Math.random() * 1.25 + 0.5
+
+    if (window.innerWidth < 800) rndmSize = Math.random() * 0.75 + 0.1
+    else rndmSize = Math.random() * 1.25 + 0.5
+
     //random starting angle
     let rndmAngle = Math.random() * 360
     //random speed
-    let rndSpeed = 10 - rndmSize * 6
+    //let rndSpeed = 10 - rndmSize * 6
+
+    if (window.innerWidth < 800) rndSpeed = 6 - rndmSize * 4
+    else rndSpeed = 10 - rndmSize * 6
+
     //random starting point
     let rndX = Math.random() * w
     let rndY = Math.random() * h
@@ -183,6 +202,8 @@ class Entity {
 }
 
 function createPlayerBullet(bulletPosition, g1) {
+  if (window.innerWidth < 800) screenScale = 0.5
+  else screenScale = 1
   let timestamp = performance.now().toFixed(0)
   let idString
   if (g1) {
@@ -226,7 +247,7 @@ function createPlayerBullet(bulletPosition, g1) {
       render: {
         visible: true,
         isBorderBoxVisible: false,
-        scale: 1,
+        scale: screenScale,
       },
       sprite: {
         path: "./assets/images/playerbullet.png",
