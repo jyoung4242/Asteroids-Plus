@@ -36,7 +36,7 @@ function addPlayerEntity(w, h) {
         maxAcceleration: 1,
         maxSpeed: 10,
         speed: 0,
-        acceleration: 0.2,
+        acceleration: 0.4,
       },
       render: {
         visible: false,
@@ -67,7 +67,7 @@ function generateAsteroids(numAsteroids, w, h) {
   var rsltArray = []
   //map animation sequence
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < numAsteroids; i++) {
     //determine all the random decisions first
     //random size
     let rndmSize = Math.random() * 1.25 + 0.5

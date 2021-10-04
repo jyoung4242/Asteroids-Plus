@@ -84,6 +84,21 @@ body,
   opacity: 1;
 }
 
+.instructions {
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 25px;
+  border: 25px solid transparent;
+  border-image: url("./assets/images/border.svg") 25 stretch;
+  display: block;
+}
+
+.centered {
+  text-align: center;
+}
+
 .diagnostics {
   position: absolute;
   bottom: 0;

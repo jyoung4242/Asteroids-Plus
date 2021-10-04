@@ -17,6 +17,9 @@ let screenWidth = window.innerWidth
 let screenHeight = window.innerHeight
 let entityArray = []
 
+var sfx = {}
+var music = {}
+
 /**
  * Time stamp variables and GameLoop
  *
@@ -100,7 +103,7 @@ function init() {
     entity.innerHandle.style.backgroundRepeat = `no-repeat`
     set_visibility(entity, false)
   })
-
+  loadSounds()
   showIntroScreen()
 }
 

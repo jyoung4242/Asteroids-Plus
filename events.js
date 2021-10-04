@@ -5,6 +5,9 @@ var isLoopRunning = false
 /*Weapon variables */
 var isGun1Firing = true
 
+/* Music Toggle*/
+var isMusicPlaying = true
+
 /* Direction key state */
 const directions = {
   up: "up",
@@ -78,11 +81,20 @@ function keydownHandler(e) {
         document.dispatchEvent(pauseLoop)
       } else if (e.code == "Space") {
         document.dispatchEvent(fireEventPlayer)
+      } else if (e.code == "Backslash") {
+        //toggle music
+        if (isMusicPlaying) {
+          isMusicPlaying = false
+          music.bgm.pause()
+        } else {
+          isMusicPlaying = true
+          music.bgm.play()
+        }
       }
     }
   } else {
     //keypress management outside of game
-
+    //start bg music here
     document.dispatchEvent(startGame)
   }
 }
@@ -130,8 +142,6 @@ function fireWeaponHandler(e) {
 
   //create the entity
   let bulletEntity = createPlayerBullet(bulletPositionObject, isGun1Firing)
-  console.log(bulletEntity)
-  console.log(bulletPositionObject)
 
   entity = new Entity(bulletEntity.id, bulletEntity.category)
   for (const [component, data] of Object.entries(bulletEntity.components)) {
@@ -162,10 +172,28 @@ function fireWeaponHandler(e) {
       hitbox: entity.hitbox,
     },
   })
+
+  sfx.fire.play()
 }
 
 function collisionWithAsteroidHandler(e) {
-  console.log(`${e.detail} hit an asteroid!`)
+  let sound = Math.floor(Math.random() * 3)
+
+  switch (sound) {
+    case 0:
+      console.log("made it here")
+      sfx.collision1.play()
+      break
+    case 1:
+      sfx.collision2.play()
+      break
+    case 2:
+      sfx.collision3.play()
+      break
+    default:
+      sfx.collision1.play()
+      break
+  }
 }
 
 function entityDestroyHandler(e) {

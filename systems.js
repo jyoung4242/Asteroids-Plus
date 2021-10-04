@@ -48,7 +48,7 @@ onmessage = (e) => {
       screenHeight = e.data.data.h
       break
     case "bullet":
-      console.log(e.data)
+      //console.log(e.data)
       createEnt(e.data.data)
       break
     default:
@@ -330,7 +330,7 @@ class screenCollisionSystem extends System {
       if (rectRight > screenWidth + playerWidth) {
         //right collision
         if (entity.category == "bullet") {
-          console.log("here")
+          //console.log("here")
           foundIndex = entities.findIndex((ent) => ent.id == entity.id)
           postMessagetoMain({ type: "delete", data: { id: entity.id } })
           entities.splice(foundIndex, 1)
@@ -435,6 +435,7 @@ class A2ACollisionSystem extends System {
             entity.velocity.deltaY += impulse * ent.hitbox.mass * vCollisionNorm.y
             entity.velocity.theta = Math.atan2(entity.velocity.deltaY, entity.velocity.deltaX) * (180 / Math.PI)
             entity.velocity.speed = Math.sqrt(entity.velocity.deltaX * entity.velocity.deltaX + entity.velocity.deltaY * entity.velocity.deltaY)
+            postMessagetoMain({ type: "collision", data: {} })
           } else {
             //not a collision, if in active list, remove
             activeCollisions.forEach((collisionPair, index) => {

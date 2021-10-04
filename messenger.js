@@ -35,7 +35,6 @@ function processMessages() {
         case "spritesheet":
           found = entities.findIndex((entity) => entity.id == message.data.id)
           entities[found].sprite.frameIndex = message.data.frameData
-          //console.log(message)
           break
         case "movement":
           found = entities.findIndex((entity) => entity.id == message.data.id)
@@ -44,12 +43,12 @@ function processMessages() {
           entities[found].body.theta = message.data.theta
           break
         case "delete":
-          console.log(message)
           found = entities.findIndex((entity) => entity.id == message.data.id)
-          console.log(found)
           id = document.getElementById(entities[found].id)
-          console.log(id)
           id.remove()
+          break
+        case "collision":
+          document.dispatchEvent(collisionAsteroid)
 
           break
         default:
