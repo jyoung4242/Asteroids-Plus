@@ -58,6 +58,9 @@ function showLevelIntro() {
       postMessagetoWorker({ type: "TimerEnable", data: { enabled: true } })
     })
     music.bgm.play()
+    //hide touch enable div
+
+    document.getElementById("touchEnablebutton").style.display = "none"
   }, 2000)
 }
 

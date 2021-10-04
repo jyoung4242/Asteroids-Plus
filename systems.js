@@ -285,8 +285,14 @@ class MovementSystem extends System {
       } else entity.velocity.deltaTheta = 0
     } else {
       //enemy or asteroid or bullets
-      if (entity.velocity.speed >= 10) {
-        entity.velocity.speed = 10
+      if (entity.category == "bullet") {
+        if (entity.velocity.speed >= 15) {
+          entity.velocity.speed = 15
+        }
+      } else {
+        if (entity.velocity.speed >= 10) {
+          entity.velocity.speed = 10
+        }
       }
     }
 

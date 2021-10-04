@@ -16,7 +16,7 @@ let gameLevel = 1
 let screenWidth = window.innerWidth
 let screenHeight = window.innerHeight
 let entityArray = []
-
+var lastStickState
 var sfx = {}
 var music = {}
 
@@ -131,7 +131,21 @@ function gameLoop(deltaTime) {
     //process updates from web worker
     processMessages()
 
-    //manage spritesheet updates
+    //check joystick
+
+    if (boolTouchControls) {
+      jstick = joy.GetDir()
+
+      if (lastStickState === undefined) {
+        // first loop through
+        lastStickState = jstick
+        window.dispatchEvent(joystick, { detail: jstick })
+      } else if (jstick !== lastStickState) {
+        //state changed
+        lastStickState = jstick
+        window.dispatchEvent(joystick, { detail: jstick })
+      }
+    }
 
     //mangage div renderings
     entities.forEach((entity) => {
@@ -146,8 +160,10 @@ function gameLoop(deltaTime) {
   requestAnimationFrame(gameLoop)
 }
 
-init()
-window.requestAnimationFrame(gameLoop)
+window.addEventListener("load", () => {
+  init()
+  window.requestAnimationFrame(gameLoop)
+})
 
 class System {
   constructor(name) {

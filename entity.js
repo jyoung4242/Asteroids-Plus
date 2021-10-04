@@ -219,8 +219,8 @@ function createPlayerBullet(bulletPosition, g1) {
         theta: bulletPosition.theta,
         deltaTheta: 0,
         maxAcceleration: 1,
-        maxSpeed: 10,
-        speed: 10,
+        maxSpeed: 15,
+        speed: 15,
         acceleration: 0.1,
       },
       render: {

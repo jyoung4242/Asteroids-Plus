@@ -1,6 +1,7 @@
 //keyboard variables
 var held_directions = []
 var isLoopRunning = false
+var boolTouchControls = false
 
 /*Weapon variables */
 var isGun1Firing = true
@@ -22,6 +23,7 @@ const keys = {
   ArrowDown: directions.down,
 }
 
+var jstick
 var collisionBoxesVisible = false
 var entities = []
 
@@ -54,7 +56,7 @@ const fireWeaponEnemy = new CustomEvent("fireWeaponEnemy", { detail: {} })
 const startGame = new Event("startGame")
 const toggleCollisionBoxes = new Event("toggleCollisionBoxes")
 const pauseLoop = new Event("pauseLoop")
-
+const joystick = new Event("jstick")
 /******************************
  * Define Handlers
  *
@@ -99,6 +101,82 @@ function keydownHandler(e) {
   }
 }
 
+function jstickHandler() {
+  console.log(jstick)
+
+  switch (jstick) {
+    case "N":
+      held_directions = []
+      var dir = keys["ArrowUp"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "NE":
+      held_directions = []
+      var dir = keys["ArrowUp"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      var dir = keys["ArrowRight"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "NW":
+      held_directions = []
+      var dir = keys["ArrowUp"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      var dir = keys["ArrowLeft"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "E":
+      held_directions = []
+      var dir = keys["ArrowRight"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "W":
+      held_directions = []
+      var dir = keys["ArrowLeft"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "SE":
+      held_directions = []
+      var dir = keys["ArrowDown"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      var dir = keys["ArrowRight"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "SW":
+      held_directions = []
+      var dir = keys["ArrowDown"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      var dir = keys["ArrowLeft"]
+      if (dir && held_directions.indexOf(dir) === -1) {
+        held_directions.unshift(dir)
+      }
+      break
+    case "C":
+      held_directions = []
+      break
+  }
+  postMessagetoWorker({ type: "keypress", data: held_directions })
+}
+
 function startGameHandler() {
   //show Level 1 in message
   gameLevel = 1
@@ -122,6 +200,11 @@ function reportWindowSize(e) {
 }
 
 function fireWeaponHandler(e) {
+  if (!isLoopRunning) {
+    gameLevel = 1
+    showLevelIntro()
+    return
+  }
   let bulletPositionObject = {}
   //find player entity
   const playerentity = entities.find((ent) => ent.category == "player")
@@ -181,7 +264,6 @@ function collisionWithAsteroidHandler(e) {
 
   switch (sound) {
     case 0:
-      console.log("made it here")
       sfx.collision1.play()
       break
     case 1:
@@ -286,6 +368,20 @@ function pauseHandler() {
   else isLoopRunning = true
 }
 
+function toggleTouchEnable() {
+  boolTouchControls = touchEnabled.checked
+
+  if (boolTouchControls) {
+    document.getElementById("joycontrols").style.visibility = "visible"
+    document.getElementById("buttoncontrols").style.visibility = "visible"
+    firebutton.addEventListener("click", fireWeaponHandler)
+  } else {
+    document.getElementById("joycontrols").style.visibility = "hidden"
+    document.getElementById("buttoncontrols").style.visibility = "hidden"
+    firebutton.removeEventListener("click", fireWeaponHandler)
+  }
+}
+
 /******************************
  * Initialize Event Listeners
  *
@@ -317,4 +413,6 @@ function initEvents() {
   document.addEventListener("toggleCollisionBoxes", toggleCollisionBoxesHandler)
   document.addEventListener("pauseLoop", pauseHandler)
   window.addEventListener("resize", reportWindowSize)
+  touchEnabled.addEventListener("change", toggleTouchEnable)
+  window.addEventListener("jstick", jstickHandler)
 }
