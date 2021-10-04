@@ -20,6 +20,10 @@ var lastStickState
 var sfx = {}
 var music = {}
 
+var body = document.getElementsByTagName("body")[0]
+body.style.width = screen.width
+body.style.height = screen.height
+
 console.log(`Screen Size: ${screen.width}, ${screen.height}`)
 console.log(`Window Size: ${window.innerWidth}, ${window.innerHeight}`)
 
