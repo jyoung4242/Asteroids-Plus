@@ -81,7 +81,10 @@ function init() {
     },
     false
   )
-  window.addEventListener(
+  touchEnabled.addEventListener("click", (e) => {
+    alert("clicked")
+  })
+  /* window.addEventListener(
     "touchmove",
     function (e) {
       e.preventDefault()
@@ -94,7 +97,7 @@ function init() {
       e.preventDefault()
     },
     false
-  )
+  ) */
 
   window.dispatchEvent(new Event("resize"))
 
