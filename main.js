@@ -71,6 +71,7 @@ function init() {
     "touchstart",
     function (e) {
       e.preventDefault()
+      alert("Hi")
       if (document.getElementById("mobileCheck").checked) {
         document.getElementById("mobileCheck").checked = false
       } else {
