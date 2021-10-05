@@ -71,6 +71,7 @@ function init() {
     "touchstart",
     function (e) {
       e.preventDefault()
+      alert(e.touches[0])
     },
     false
   )
