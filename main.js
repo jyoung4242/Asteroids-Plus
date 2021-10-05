@@ -67,24 +67,18 @@ function init() {
   UI.android = UI.ua.indexOf("android") > -1 ? true : false
   UI.ios = UI.ua.indexOf("iphone") > -1 || UI.ua.indexOf("ipad") > -1 ? true : false
 
-  // listen for touches
-  touchEnabled.addEventListener(
+  touchEnabled.addEventListener("click", (e) => {
+    console.log("click")
+  })
+
+  window.addEventListener(
     "touchstart",
     function (e) {
-      //e.preventDefault()
-      alert("Hi")
-      if (document.getElementById("mobileCheck").checked) {
-        document.getElementById("mobileCheck").checked = false
-      } else {
-        document.getElementById("mobileCheck").checked = true
-      }
+      e.preventDefault()
     },
     false
   )
-  touchEnabled.addEventListener("click", (e) => {
-    alert("clicked")
-  })
-  /* window.addEventListener(
+  window.addEventListener(
     "touchmove",
     function (e) {
       e.preventDefault()
@@ -97,7 +91,7 @@ function init() {
       e.preventDefault()
     },
     false
-  ) */
+  )
 
   window.dispatchEvent(new Event("resize"))
 
