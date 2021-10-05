@@ -71,7 +71,7 @@ function init() {
     console.log("click")
   })
 
-  window.addEventListener(
+  /* window.addEventListener(
     "touchstart",
     function (e) {
       e.preventDefault()
@@ -91,7 +91,7 @@ function init() {
       e.preventDefault()
     },
     false
-  )
+  ) */
 
   window.dispatchEvent(new Event("resize"))
 
