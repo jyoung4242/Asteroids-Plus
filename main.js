@@ -66,11 +66,12 @@ function init() {
   UI.ua = navigator.userAgent.toLowerCase()
   UI.android = UI.ua.indexOf("android") > -1 ? true : false
   UI.ios = UI.ua.indexOf("iphone") > -1 || UI.ua.indexOf("ipad") > -1 ? true : false
+
   // listen for touches
   touchEnabled.addEventListener(
     "touchstart",
     function (e) {
-      e.preventDefault()
+      //e.preventDefault()
       alert("Hi")
       if (document.getElementById("mobileCheck").checked) {
         document.getElementById("mobileCheck").checked = false
