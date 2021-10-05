@@ -226,7 +226,7 @@ window.addEventListener("resize", () => {
   if (UI.android || UI.ios) {
     document.body.style.height = window.innerHeight + 50 + "px"
   }
-
+  postMessagetoWorker({ type: "setWindowDims", data: { w: screenWidth, h: screenHeight } })
   // we use a timeout here as some mobile
   // browsers won't scroll if there is not
   // a small delay
