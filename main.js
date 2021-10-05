@@ -20,6 +20,19 @@ var lastStickState
 var sfx = {}
 var music = {}
 
+var UI = {
+  WIDTH: 320,
+  HEIGHT: 480,
+  scale: 1,
+  offset: { top: 0, left: 0 },
+  RATIO: null,
+  currentWidth: null,
+  currentHeight: null,
+  ua: null,
+  android: null,
+  ios: null,
+}
+
 var body = document.getElementsByTagName("body")[0]
 body.style.width = window.innerWidth
 body.style.height = window.innerHeight
@@ -47,6 +60,37 @@ function configureLevel(level) {
 }
 
 function init() {
+  UI.RATIO = UI.width / UI.height
+  UI.currentwidth = UI.width
+  UI.currentheight = UI.height
+  UI.ua = navigator.userAgent.toLowerCase()
+  UI.android = UI.ua.indexOf("android") > -1 ? true : false
+  UI.ios = UI.ua.indexOf("iphone") > -1 || UI.ua.indexOf("ipad") > -1 ? true : false
+  // listen for touches
+  window.addEventListener(
+    "touchstart",
+    function (e) {
+      e.preventDefault()
+    },
+    false
+  )
+  window.addEventListener(
+    "touchmove",
+    function (e) {
+      e.preventDefault()
+    },
+    false
+  )
+  window.addEventListener(
+    "touchend",
+    function (e) {
+      e.preventDefault()
+    },
+    false
+  )
+
+  window.dispatchEvent(new Event("resize"))
+
   //initialize events, including keyboard handler
   initEvents()
 
@@ -170,6 +214,21 @@ function gameLoop(deltaTime) {
 window.addEventListener("load", () => {
   init()
   window.requestAnimationFrame(gameLoop)
+})
+
+window.addEventListener("resize", () => {
+  UI.currentHeight = window.innerHeight
+  UI.currentWidth = window.innerWidth
+  if (UI.android || UI.ios) {
+    document.body.style.height = window.innerHeight + 50 + "px"
+  }
+
+  // we use a timeout here as some mobile
+  // browsers won't scroll if there is not
+  // a small delay
+  window.setTimeout(function () {
+    window.scrollTo(0, 1)
+  }, 1)
 })
 
 class System {
